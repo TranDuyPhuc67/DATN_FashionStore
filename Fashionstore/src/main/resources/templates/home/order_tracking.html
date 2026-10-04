@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{home_layout}">
+<head>
+<meta charset="UTF-8">
+<title>Theo dõi đơn hàng</title>
+
+<style>
+.invoice-card {
+    background: #fff;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+/* tracking */
+.order-tracking {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    margin-top: 40px;
+}
+.order-tracking::before {
+    content: '';
+    position: absolute;
+    top: 15px;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: #ddd;
+}
+.step {
+    text-align: center;
+    width: 20%;
+    position: relative;
+}
+.circle {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background: #ccc;
+    margin: auto;
+    line-height: 35px;
+    color: white;
+    font-weight: bold;
+}
+.label {
+    margin-top: 10px;
+    font-size: 14px;
+}
+.step.active .circle {
+    background: #28a745;
+}
+.step.active .label {
+    color: #28a745;
+    font-weight: bold;
+}
+</style>
+
+</head>
+
+<body>
+<div layout:fragment="page_content">
+    <div class="container mt-4">
+
+        <div class="invoice-card">
+            <h2 class="mb-4">Theo dõi đơn hàng</h2>
+
+            <!-- THÔNG TIN ĐƠN -->
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Mã đơn hàng:</strong> <span th:text="${order.orderId}"></span></p>
+                    <p><strong>Ngày đặt:</strong> <span th:text="${order.orderDate}"></span></p>
+                </div>
+
+                <div class="col-md-6">
+                    <p><strong>Người nhận:</strong> <span th:text="${order.receiveName}"></span></p>
+                    <p><strong>SĐT:</strong> <span th:text="${order.receivePhone}"></span></p>
+                </div>
+            </div>
+
+            <hr>
+
+            <!-- TRẠNG THÁI -->
+            <p>
+                <strong>Trạng thái hiện tại:</strong>
+                <span class="badge bg-success" th:switch="${order.status}">
+                    <span th:case="0">Chờ thanh toán</span>
+<span th:case="1">Đã xác nhận đơn hàng</span>
+<span th:case="2">Đang vận chuyển</span>
+<span th:case="3">Đang giao hàng</span>
+<span th:case="4">Giao thành công</span>
+                </span>
+            </p>
+
+            <!-- TRACKING -->
+            <h5 class="mt-4">Tiến trình đơn hàng</h5>
+
+            <div class="order-tracking">
+
+                <div class="step" th:classappend="${order.status >= 0} ? 'active'">
+                    <div class="circle">1</div>
+                    <div class="label">Chờ thanh toán</div>
+                </div>
+
+                <div class="step" th:classappend="${order.status >= 1} ? 'active'">
+                    <div class="circle">2</div>
+                    <div class="label">Đã xác nhận đơn hàng</div>
+                </div>
+
+                <div class="step" th:classappend="${order.status >= 2} ? 'active'">
+                    <div class="circle">3</div>
+                    <div class="label">Đang vận chuyển</div>
+                </div>
+
+                <div class="step" th:classappend="${order.status >= 3} ? 'active'">
+                    <div class="circle">4</div>
+                    <div class="label">Đang giao hàng</div>
+                </div>
+
+                <div class="step" th:classappend="${order.status >= 4} ? 'active'">
+                    <div class="circle">5</div>
+                    <div class="label">Giao thành công</div>
+                </div>
+
+            </div>
+
+            <hr>
+
+            <!-- NÚT -->
+            <div class="text-center mt-4">
+                <a href="/shop" class="btn btn-primary">Tiếp tục mua hàng</a>
+  
+            </div>
+
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

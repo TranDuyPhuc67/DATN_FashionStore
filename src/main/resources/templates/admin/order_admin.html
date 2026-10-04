@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{home_layout}">
+<head>
+<meta charset="UTF-8">
+<title>Quản lý đơn hàng</title>
+</head>
+
+<body>
+<div layout:fragment="page_content">
+    <div class="container mt-4">
+        <h2>Cập nhật trạng thái (Admin)</h2>
+
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Mã đơn</th>
+                    <th>Người nhận</th>
+                    <th>Tổng tiền</th>
+                    <th>Trạng thái</th>
+                    <th>Cập nhật</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <tr th:each="o : ${orders}">
+                    <td th:text="${o.orderId}"></td>
+                    <td th:text="${o.receiveName}"></td>
+                    <td th:text="${o.total}"></td>
+
+                    <td>
+                        <span th:switch="${o.status}">
+                            <span th:case="0">Nhận hàng</span>
+                            <span th:case="1">Kết nối</span>
+                            <span th:case="2">Vận chuyển</span>
+                            <span th:case="3">Giao hàng</span>
+                            <span th:case="4">Hoàn thành</span>
+                        </span>
+                    </td>
+
+                    <td>
+                        <form th:action="@{/order/update}" method="post">
+                            <input type="hidden" name="id" th:value="${o.orderId}"/>
+
+                            <select name="status" class="form-select">
+                                <option value="0">Nhận hàng</option>
+                                <option value="1">Kết nối</option>
+                                <option value="2">Vận chuyển</option>
+                                <option value="3">Giao hàng</option>
+                                <option value="4">Hoàn thành</option>
+                            </select>
+
+                            <button class="btn btn-success mt-2">Cập nhật</button>
+                        </form>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>

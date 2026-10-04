@@ -8,10 +8,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import Fashionstore.entities.Account;
 import Fashionstore.entities.CartItem;
@@ -21,7 +18,7 @@ import Fashionstore.repositories.AccountRepository;
 import Fashionstore.repositories.CartItemRepository;
 import Fashionstore.repositories.ProductRepository;
 import Fashionstore.services.CartService;
-import Fashionstore.services.ProductService;
+
 @Controller
 public class CartController {
 
@@ -32,81 +29,137 @@ public class CartController {
     private CartItemRepository cartItemRepo;
 
     @Autowired
-	CartService cartService;
-    
-    @Autowired
-	ProductService productService;
-    
+    private CartService cartService;
+
     @Autowired
     private ProductRepository productRepo;
 
-    @GetMapping("/cart") 
-    public String viewCart(Principal principal, Model model) { 
-    	String username = principal.getName(); 
-    	Account acc = accountRepo.findByUsername(username).orElseThrow(); 
-    	List<CartItem> cartItems = cartItemRepo.findByAccount(acc); 
-    	cartItems.removeIf(item ->
-        item.getProduct() == null ||
-        item.getProduct().getProductId() == null
-    );
-    	double totalCart = cartItems.stream().mapToDouble(CartItem::getTotal).sum(); 
-    	model.addAttribute("cartitems", cartItems); 
-    	model.addAttribute("totalCart", totalCart); 
-    	return "home/shopingcart"; 
-    	}
+    @GetMapping("/cart")
+    public String viewCart(Principal principal, Model model) {
 
-    @PostMapping("/addcart") 
-    public String addCart(@RequestParam("productId") String productId, 
-    					  @RequestParam(defaultValue = "1") int quantity, 
-    					  Principal principal) { String username = principal.getName(); 
-    					  Account acc = accountRepo.findByUsername(username).orElseThrow(); 
-    					  Product product = productRepo.findById(productId).orElseThrow(); 
-    					  Optional<CartItem> existing = cartItemRepo.findByAccountAndProduct(acc, product); 
-    					  if (existing.isPresent()) { 
-    						  CartItem item = existing.get(); 
-    						  item.setQuantity(item.getQuantity() + quantity); 
-    						  cartItemRepo.save(item); 
-    						  } else {
-    							  CartItem item = new CartItem(); 
-    							  item.setAccount(acc); 
-    							  item.setProduct(product); 
-    							  item.setQuantity(quantity); 
-    							  cartItemRepo.save(item); 
-    							  } return "redirect:/cart"; 
-    							  }
+        if (principal == null) {
+            return "redirect:/login";
+        }
+
+        Account acc = accountRepo.findByUsername(principal.getName())
+                .orElseThrow();
+
+        List<CartItem> cartItems = cartItemRepo.findByAccount(acc);
+
+        double totalCart = cartItems.stream()
+                .mapToDouble(CartItem::getTotal)
+                .sum();
+
+        model.addAttribute("cartitems", cartItems);
+        model.addAttribute("totalCart", totalCart);
+
+        return "home/shopingcart";
+    }
+
+    @PostMapping("/addcart")
+    public String addCart(
+            @RequestParam("productId") String productId,
+            @RequestParam(defaultValue = "1") int quantity,
+            Principal principal) {
+
+        if (principal == null) {
+            return "redirect:/login";
+        }
+
+        Account acc = accountRepo.findByUsername(principal.getName())
+                .orElseThrow();
+
+        Product product = productRepo.findById(productId)
+                .orElseThrow();
+
+        Optional<CartItem> existing =
+                cartItemRepo.findByAccountAndProduct(acc, product);
+
+        if (existing.isPresent()) {
+
+            CartItem item = existing.get();
+            item.setQuantity(item.getQuantity() + quantity);
+            cartItemRepo.save(item);
+
+        } else {
+
+            CartItem item = new CartItem();
+            item.setAccount(acc);
+            item.setProduct(product);
+            item.setQuantity(quantity);
+
+            cartItemRepo.save(item);
+        }
+
+        return "redirect:/cart";
+    }
 
     @GetMapping("/removeCart/{id}")
-    public String removeCart(@PathVariable("id") String productId,
-                             Principal principal) {
-        String username = principal.getName();
-        cartService.removeCart(username, productId);
+    public String removeCart(
+            @PathVariable("id") String productId,
+            Principal principal) {
+
+        if (principal == null) {
+            return "redirect:/login";
+        }
+
+        cartService.removeCart(principal.getName(), productId);
+
         return "redirect:/cart";
     }
 
     @PostMapping("/checkout")
-    public String checkout(Order order, Model model, Principal principal) {
-        String username = principal.getName();
-        Account acc = accountRepo.findByUsername(username).orElseThrow();
+    public String checkout(
+            Order order,
+            Principal principal,
+            Model model) {
 
-        List<CartItem> cartItems = cartItemRepo.findByAccount(acc);
-        if (cartItems == null || cartItems.isEmpty()) {
+        if (principal == null) {
+            return "redirect:/login";
+        }
+
+        Account acc = accountRepo.findByUsername(principal.getName())
+                .orElseThrow();
+
+        List<CartItem> cartItems =
+                cartItemRepo.findByAccount(acc);
+
+        if (cartItems.isEmpty()) {
+
             model.addAttribute("msg", "Giỏ hàng trống!");
+
+            double totalCart = 0;
+
+            model.addAttribute("cartitems", cartItems);
+            model.addAttribute("totalCart", totalCart);
+
             return "home/shopingcart";
         }
 
-        double total = cartItems.stream().mapToDouble(CartItem::getTotal).sum();
-        order.setTotal(total);
+        double total = cartItems.stream()
+                .mapToDouble(CartItem::getTotal)
+                .sum();
 
+        order.setTotal(total);
         order.setOrderDate(LocalDateTime.now());
         order.setReceivedate(LocalDateTime.now().plusDays(3));
+
+        // 0 = Chờ thanh toán
         order.setStatus(0);
+
         order.setAccount(acc);
-        
-        cartService.insertOrder(order, cartItems);
 
-        model.addAttribute("order", order);
-        model.addAttribute("items", cartItems);
+        /*
+         * Nếu Order.java đang dùng:
+         *
+         * @GeneratedValue(strategy = GenerationType.UUID)
+         *
+         * thì KHÔNG gọi order.setOrderId(...)
+         */
 
-        return "home/invoice";
+        Order savedOrder = cartService.insertOrder(order, cartItems);
+
+        return "redirect:/invoice/" + savedOrder.getOrderId();
     }
+
 }

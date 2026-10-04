@@ -69,17 +69,24 @@ public class CartService {
 	    }
 	}
 
-	public void insertOrder(Order order, List<CartItem> cartItems) {
-	    orderRepository.save(order);
+	public Order insertOrder(Order order, List<CartItem> cartItems) {
+
+	    Order savedOrder = orderRepository.save(order);
 
 	    for (CartItem ci : cartItems) {
+
 	        OrderDetail detail = new OrderDetail();
-	        detail.setOrder(order);
+
+	        detail.setOrder(savedOrder);
 	        detail.setProduct(ci.getProduct());
 	        detail.setQuantity(ci.getQuantity());
 	        detail.setPrice(ci.getProduct().getPrice());
+
 	        orderDetailRepository.save(detail);
 	    }
-	}
 
+	    cartItemRepository.deleteAll(cartItems);
+
+	    return savedOrder;
+	}
 }

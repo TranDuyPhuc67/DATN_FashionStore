@@ -24,7 +24,12 @@ public class Order {
 	@Column(name="orderid", length = 36)
 	private String orderId;
 
+	@Column(name = "payment_reference", length = 100)
+	private String paymentReference;
 
+	@Column(name = "payment_time")
+	private LocalDateTime paymentTime;
+	
     @DateTimeFormat(pattern = "dd/MM/yyyy")
     @Column(name = "orderdate")
     private LocalDateTime orderDate;   
@@ -89,4 +94,20 @@ public class Order {
 
     public Set<OrderDetail> getDetails() { return details; }
     public void setDetails(Set<OrderDetail> details) { this.details = details; }
+    
+    public String getPaymentReference() {
+        return paymentReference;
+    }
+
+    public void setPaymentReference(String paymentReference) {
+        this.paymentReference = paymentReference;
+    }
+
+    public LocalDateTime getPaymentTime() {
+        return paymentTime;
+    }
+
+    public void setPaymentTime(LocalDateTime paymentTime) {
+        this.paymentTime = paymentTime;
+    }
 }

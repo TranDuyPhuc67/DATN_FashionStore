@@ -101,8 +101,7 @@
 										<div class="row">
 											<span class="col-12 col-sm-6 cart__subtotal-title"><strong>Subtotal</strong></span>
 											<span
-												class="col-12 col-sm-6 cart__subtotal-title cart__subtotal text-right">$<span
-												class="money" th:text="${totalCart}"></span></span>
+												class="col-12 col-sm-6 cart__subtotal-title cart__subtotal text-right"><span th:text="${#numbers.formatDecimal(totalCart,0,'COMMA',0,'POINT')}"></span> VNĐ</span>
 										</div>
 										<div class="cart__shipping">Shipping &amp; taxes
 											calculated at checkout</div>
